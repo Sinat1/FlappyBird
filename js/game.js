@@ -1,7 +1,7 @@
 const cvs = document.getElementById("canvas");
 const ctx = cvs.getContext("2d");
 
-//IMAGES DECLARATION
+// IMAGES DECLARATION
 const bird = new Image();
 const bg = new Image();
 const fg = new Image();
@@ -14,38 +14,54 @@ fg.src = "images/fg.png";
 pipeUp.src = "images/pipeUp.png";
 pipeBottom.src = "images/pipeBottom.png";
 
-//AUDIO DECLARATION
+// AUDIO DECLARATION
 const fly = new Audio();
 const score_audio = new Audio();
 
 fly.src = "audio/fly.mp3";
 score_audio.src = "audio/score.mp3";
 
-//LOGIC
-
+// LOGIC
 const gap = 90;
+let animationID; // animation ID
+let animationActive = true; // Flag to track animation activity
 
-//BUTTON LISTENING
 document.addEventListener("keydown", moveUp);
 
-function moveUp() {
-  yPos -= 30;
-  fly.play();
-}
-
-//BLOCK CREATION
 let pipe = [];
-
 pipe[0] = {
   x: cvs.width,
   y: 0,
 };
 
 let score = 0;
-//BIRD POSITION
 let xPos = 10;
 let yPos = 150;
 let grav = 1.7;
+
+function moveUp() {
+  yPos -= 30;
+  fly.play();
+}
+
+function resetGame() {
+  xPos = 10;
+  yPos = 150;
+  score = 0;
+  pipe = [];
+  pipe[0] = { x: cvs.width, y: 0 };
+  grav = 1.7;
+  startAnimation(); // Starting the animation again after resetting the game
+}
+
+function startAnimation() {
+  animationActive = true;
+  animationID = requestAnimationFrame(draw); // Starting the animation
+}
+
+function stopAnimation() {
+  cancelAnimationFrame(animationID); // Stopping the animation
+}
 
 function draw() {
   ctx.drawImage(bg, 0, 0);
@@ -70,7 +86,10 @@ function draw() {
           yPos + bird.height >= pipe[i].y + pipeUp.height + gap)) ||
       yPos + bird.height >= cvs.height - fg.height
     ) {
-      location.reload();
+      animationActive = false; // Stopping the animation when losing
+      stopAnimation();
+      resetGame(); // Resetting the game
+      return; // Exiting the function
     }
 
     if (pipe[i].x == 5) {
@@ -86,8 +105,11 @@ function draw() {
 
   ctx.fillStyle = "#000";
   ctx.font = "24px Verdana";
-  ctx.fillText("Score: " + score, 10, cvs.height - 20),
-    requestAnimationFrame(draw);
+  ctx.fillText("Score: " + score, 10, cvs.height - 20);
+
+  if (animationActive) {
+    animationID = requestAnimationFrame(draw); // Continuing the animation
+  }
 }
 
-pipeBottom.onload = draw;
+pipeBottom.onload = startAnimation; // Starting the animation after loading
